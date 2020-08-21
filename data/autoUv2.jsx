@@ -171,16 +171,15 @@ function createTableGlass(data) {
 
         }
         else if (tableType === "table2") {
+            if (i === 0)
+                GLLMKhungTableType2(wAll, hAll, wOIn, hOIn);
             GLLMTableType2(arr, wAll, hAll, yPosition, xPosition, hLast, wLast, lastName, stt, i, FileDesign, wOIn, hOIn);
             { // xử lý sau khi duplicate hết items crop, xoay 180, tao spot
                 app.activeDocument.activeLayer = app.activeDocument.layerSets["SPOT"].artLayers.getByName("SPOTKhung");
                 var PSpotKhung = app.activeDocument.activeLayer.bounds;
                 app.activeDocument.crop(PSpotKhung, 0, PSpotKhung[2] - PSpotKhung[0], PSpotKhung[3] - PSpotKhung[1]);
-
             }
             { // lưu file khung
-                // app.doAction("selectArea", "autoUv");
-                // app.doAction("createSPOTWithArea", "autoUv");
                 app.activeDocument.layerSets.getByName("SPOT").visible = true;
                 app.activeDocument.layerSets.getByName("CMYK").visible = false;
                 var folder1 = Folder("~/Desktop/in an/Glass " + "b-" + (i + 1) + "-" + FileName);
@@ -189,7 +188,6 @@ function createTableGlass(data) {
             }
             {// lưu file in
                 app.activeDocument.rotateCanvas(180);
-                // app.activeDocument.channels.getByName("Spot Color 1").remove();
                 app.activeDocument.layerSets.getByName("SPOT").visible = false;
                 app.activeDocument.layerSets.getByName("CMYK").visible = true;
                 var PCMYK = app.activeDocument.layerSets.getByName("CMYK").bounds;
@@ -1015,7 +1013,56 @@ function GLLMTableType2(arr, wAll, hAll, yPosition, xPosition, hLast, wLast, las
 
     }
 }
+function GLLMKhungTableType2(wAll, hAll, wOIn, hOIn) {
+    // for loop items
+    app.documents.add(wAll, hAll, 300, "Khung");
+    app.activeDocument.layerSets.add();
+    app.activeDocument.activeLayer.name = "SPOT";
+    var soOpMotBan = Math.floor(hAll / hOIn) * Math.floor(wAll / wOIn);
+    var yPosition = 0, xPosition = 0, wLast = 0, hLast = 0;
+    app.documents.add(wOIn, hOIn, 300, "aaaa");
+    app.activeDocument.artLayers.add();
+    app.doAction("strokeRed1px", "autoUv");
+    app.activeDocument.activeLayer.name = "0";
+    app.activeDocument.activeLayer.duplicate(app.documents["Khung"].layerSets["SPOT"], ElementPlacement.PLACEATBEGINNING);// đưa file in sang bên bàn in
+    app.activeDocument.close(SaveOptions.DONOTSAVECHANGES);
 
+    for (var j = 0; j <= soOpMotBan - 1; j++) {
+        if (xPosition + wLast + wOIn <= wAll) {
+            xPosition = xPosition + wLast;
+            wLast = wOIn;
+            hLast = hOIn;
+        }
+        else {
+            xPosition = 0;
+            yPosition = yPosition + hOIn;
+            hLast = hOIn;
+            wLast = wOIn;
+        }
+
+
+        { // translate layer đến vị trí cần in
+            app.activeDocument.activeLayer = app.activeDocument.layerSets["SPOT"].artLayers.getByName(j);
+            app.doAction("moveZero", "autoUv");
+            app.activeDocument.activeLayer.translate(xPosition, yPosition * (-1));
+            // if (j > 0) app.activeDocument.activeLayer.merge();
+            app.activeDocument.activeLayer.name = j;
+            app.activeDocument.activeLayer.duplicate(app.activeDocument.layerSets["SPOT"], ElementPlacement.PLACEATBEGINNING);
+            app.activeDocument.activeLayer.name = j + 1
+            // alert("1")
+        }
+    }
+    app.doAction("table2CreateSpot", "autoUv");
+    app.activeDocument.activeLayer = app.activeDocument.artLayers["SPOT"];
+    var PSpotKhung = app.activeDocument.activeLayer.bounds;
+    app.activeDocument.crop(PSpotKhung, 0, PSpotKhung[2] - PSpotKhung[0], PSpotKhung[3] - PSpotKhung[1]);
+    app.activeDocument.artLayers.getByName("SPOT").visible = false;
+    app.activeDocument.rotateCanvas(180);
+    app.activeDocument.saveAs(Folder("~/Desktop/in an/Khung table 2.tif"), TiffSaveOptions, false, Extension.LOWERCASE);
+    app.activeDocument.close(SaveOptions.DONOTSAVECHANGES);
+
+
+}
 function LEDOneTable(arr, wAll, hAll, yPosition, xPosition, hLast, wLast, lastName, stt, i, FileDesign) {
     // for loop items
     for (var j = 0; j <= arr[i].length - 1; j++) {
